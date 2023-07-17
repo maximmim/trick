@@ -1,0 +1,14 @@
+{
+  "name": "Yelt",
+  "short_name": "Yelt",
+  "start_url": "html/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+
+  "scope": "/",
+  "description": "Yelt is the best puzzle game from Ukrainian developers",
+  "lang": "ua"
+
+
+}
