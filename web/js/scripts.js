@@ -1,32 +1,60 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const fileslist = document.getElementById('fileslist');
-  
-    function updateFilesList() {
-      fetch('/getfiles')
-        .then(response => response.json())
-        .then(data => {
-          // Очищаем содержимое <ul> перед добавлением новых данных
-          fileslist.innerHTML = '';
-  
-          data.forEach(item => {
-            const liElement = document.createElement('li');
-            liElement.addEventListener('click',()=>{
-                console.log(liElement.textContent)
-                downloadFile(liElement.textContent)
-            })
-            liElement.textContent = item;
-            fileslist.appendChild(liElement);
-          });
-        })
-        .catch(error => {
-          console.error(error);
+function updateFilesList() {  
+  const fileslist = document.getElementById('fileslist');
+  const previewsMap = new Map();
+
+  fetch('/getfiles')
+    .then(response => response.json())
+    .then(data => {
+      // Очищаем содержимое <ul> перед добавлением новых данных
+      fileslist.innerHTML = '';
+
+      data.forEach(item => {
+        const liElement = document.createElement('li');
+        liElement.classList.add('file-item');
+
+        if (!previewsMap.has(item)) {
+          // Если предпросмотр для этого файла еще не получен, то запросим его
+          const imgElement = document.createElement('img');
+          imgElement.src = '/files/' + item; // Укажите правильный URL для получения предпросмотра
+          imgElement.classList.add('file-preview');
+
+          // Добавляем предпросмотр в карту, чтобы избежать повторных запросов
+          previewsMap.set(item, imgElement);
+        }
+
+        const fileExtension = item.split('.').pop().toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+          // If the file is a photo, show the photo preview
+          liElement.appendChild(previewsMap.get(item));
+        } else {
+          // If the file is not a photo, hide the photo preview
+          previewsMap.get(item).style.display = 'none';
+
+          // Show the file name instead
+          const fileNameElement = document.createElement('div');
+          fileNameElement.textContent = item;
+          fileNameElement.classList.add('file-name');
+          
+          liElement.appendChild(fileNameElement);
+        }
+
+        liElement.addEventListener('click', () => {
+          console.log(item);
+          downloadFile(item);
         });
-    }
-  
-    // Обновляем данные каждую секунду
-    setInterval(updateFilesList, 1000);
-  });
-  
+
+        fileslist.appendChild(liElement);
+      });
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}
+
+  document.addEventListener('DOMContentLoaded',updateFilesList);
+
+
+
 
   function downloadFile(fileName) {
     const fileUrl = '/files/'+fileName; // Укажите правильный URL вашего файла
@@ -66,6 +94,7 @@ function add() {
       })
       .then(response => {
         console.log('Статус ответа сервера:', response.status); // Проверяем статус ответа
+        updateFilesList()
         return response.text(); // Возвращаем тело ответа в виде текста
       })
       .then(data => {
@@ -74,26 +103,7 @@ function add() {
       .catch(error => {
         console.error('Произошла ошибка при отправке файла:', error);
       });
-    if (files[0].type == "image/png") {
-
-document.getElementById('buttonup').textContent= "Завантажити "+"фото"
-    }
     
-    
-    else if(  files[0].type == "image/jpeg") {
-        document.getElementById('buttonup').textContent= "Завантажити "+"фото"
-    }
-    
-    else if(  files[0].type == "application/x-zip-compressed") {
-        document.getElementById('buttonup').textContent= "Завантажити "+"zip"
-    }
-    else if(  files[0].type == "text/plain") {
-        document.getElementById('buttonup').textContent= "Завантажити "+"txt"
-    }
-    
-    else {
-        document.getElementById('buttonup').textContent= "Завантажити "+files[0].name
-    }
 }
 
 function sendFile() {
